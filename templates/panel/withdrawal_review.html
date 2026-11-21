@@ -1,0 +1,46 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Review withdrawal{% endblock %}
+{% block panel %}
+<a class="back" href="{% url 'panel_withdrawals' %}">← Withdrawals</a>
+<div class="review-grid">
+  <div class="card reveal">
+    <div class="row-between">
+      {% if w.status == 'pending' %}<span class="badge badge-pending">Pending review</span>{% elif w.status == 'paid' %}<span class="badge badge-approved">Paid</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}
+      <span class="tiny muted">#{{ w.pk }} · {{ w.created_at|date:"M j, Y H:i" }} UTC</span>
+    </div>
+    <span class="stat-label mt block">Amount to pay</span>
+    <span class="balance-value grad">${{ w.amount|floatformat:2|intcomma }}</span>
+    <p class="muted">Requested by <a href="{% url 'panel_user' w.user.pk %}">{{ w.user.username }}</a> ({{ w.user.email }}). Their remaining balance is <b>${{ balance|floatformat:2|intcomma }}</b>.</p>
+    <h4 class="sub">Payout method</h4>
+    <p><b>{{ w.get_method_display }}</b></p>
+    <h4 class="sub">Payout details</h4>
+    <pre class="acct">{{ w.account_details }}</pre>
+    <p class="tiny muted">Send the payment outside DrawQuest, then record the proof of payment on the right.</p>
+  </div>
+
+  <div class="card reveal">
+    {% if w.status == 'pending' %}
+      <h3>Your decision</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <label class="lbl">{{ form.payment_reference.label }} {{ form.payment_reference }}{{ form.payment_reference.errors }}</label>
+        <label class="lbl">{{ form.note.label }} {{ form.note }}{{ form.note.errors }}</label>
+        <div class="decision">
+          <button class="btn btn-danger btn-lg" name="decision" value="reject" type="submit" data-confirm="Reject this withdrawal and return ${{ w.amount }} to {{ w.user.username }}'s balance?">Reject &amp; refund</button>
+          <button class="btn btn-ok btn-lg" name="decision" value="paid" type="submit" data-confirm="Confirm you have already sent ${{ w.amount }} to {{ w.user.username }}?">Mark as paid</button>
+        </div>
+      </form>
+      <p class="tiny muted mt">The ${{ w.amount }} was already taken off the user's balance when they requested it. Rejecting puts it back.</p>
+    {% else %}
+      <h3>Decision</h3>
+      <div class="note">
+        {% if w.status == 'paid' %}Paid{% else %}Rejected{% endif %}
+        {% if w.reviewed_by %}by <b>{{ w.reviewed_by.username }}</b>{% endif %} {{ w.reviewed_at|naturaltime }}.
+        {% if w.payment_reference %}<br>Reference: <b>{{ w.payment_reference }}</b>{% endif %}
+        {% if w.admin_note %}<br>Note: “{{ w.admin_note }}”{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

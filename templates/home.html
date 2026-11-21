@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Get paid to draw{% endblock %}
+
+{% block content %}
+<section class="hero container">
+  <p class="eyebrow reveal"><span class="dot"></span> Now paying artists worldwide</p>
+  <h1 class="reveal">Draw it. Upload it.<br><span class="grad">Get paid for it.</span></h1>
+  <p class="lead reveal">DrawQuest is the creative task platform where every drawing earns. Pick a task, make your art, and watch the approved rewards land in your dashboard.</p>
+  <div class="hero-cta reveal">
+    {% if user.is_authenticated %}
+      <a class="btn btn-primary btn-lg" href="{% url 'tasks' %}">Browse tasks</a>
+      <a class="btn btn-ghost btn-lg" href="{% url 'dashboard' %}">My dashboard</a>
+    {% else %}
+      <a class="btn btn-primary btn-lg" href="{% url 'signup' %}">Create free account</a>
+      <a class="btn btn-ghost btn-lg" href="{% url 'login' %}">I have an account</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="container bento">
+  <div class="card stat reveal span-2"><span class="stat-label">Paid to artists</span><span class="stat-value grad">$<span data-count="{{ stats.paid|floatformat:2 }}" data-decimals="2">{{ stats.paid|floatformat:2 }}</span></span></div>
+  <div class="card stat reveal"><span class="stat-label">Artists</span><span class="stat-value" data-count="{{ stats.artists }}">{{ stats.artists }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Drawings approved</span><span class="stat-value" data-count="{{ stats.approved }}">{{ stats.approved }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Open tasks</span><span class="stat-value" data-count="{{ stats.open_tasks }}">{{ stats.open_tasks }}</span></div>
+</section>
+
+<section class="container section">
+  <div class="section-head reveal"><h2>How it works</h2><p class="muted">Three steps from blank page to balance.</p></div>
+  <div class="grid-3">
+    <div class="card step reveal"><span class="step-n">01</span><h3>Pick a task</h3><p class="muted">Every task shows its reward in $ up front. Open one to read the full brief.</p></div>
+    <div class="card step reveal"><span class="step-n">02</span><h3>Create &amp; upload</h3><p class="muted">Draw it your way, photograph or export it, and upload it right on the task page.</p></div>
+    <div class="card step reveal"><span class="step-n">03</span><h3>Get approved, get paid</h3><p class="muted">Our team reviews each piece. Approved work is credited to your dashboard instantly.</p></div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="container section">
+  <div class="section-head row-between reveal">
+    <div><h2>Fresh tasks</h2><p class="muted">Newly added, ready to draw.</p></div>
+    <a class="btn btn-ghost" href="{% url 'tasks' %}">See all →</a>
+  </div>
+  <div class="grid-3">
+    {% for t in featured %}{% include "partials/task_card.html" %}{% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="container section">
+  <div class="cta card reveal">
+    <h2>Creators welcome.</h2>
+    <p class="muted">Whether you doodle for fun or draw for a living, there's a task with your name on it.</p>
+    {% if not user.is_authenticated %}<a class="btn btn-primary btn-lg" href="{% url 'signup' %}">Join DrawQuest</a>{% else %}<a class="btn btn-primary btn-lg" href="{% url 'tasks' %}">Find a task</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

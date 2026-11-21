@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}My art{% endblock %}
+{% block content %}
+<section class="container page-head reveal">
+  <p class="eyebrow">My art</p>
+  <h1>Everything you've submitted</h1>
+  <div class="chips">
+    <a class="chip {% if not status %}is-active{% endif %}" href="?">All</a>
+    {% for value, label in statuses %}<a class="chip {% if status == value %}is-active{% endif %}" href="?status={{ value }}">{{ label }}</a>{% endfor %}
+  </div>
+</section>
+<section class="container">
+  {% if page.object_list %}
+    <div class="grid-3">
+      {% for s in page %}
+        <article class="card sub-card reveal">
+          <a class="thumb" href="{{ s.image.url }}" target="_blank" rel="noopener"><img src="{{ s.image.url }}" alt="Your drawing for {{ s.task.title }}" loading="lazy"></a>
+          <div class="task-body">
+            <div class="row-between">{% include "partials/status_badge.html" with status=s.status %}<span class="money-chip static">${{ s.reward|floatformat:2 }}</span></div>
+            <h3><a href="{% url 'task_detail' s.task.pk %}">{{ s.task.title }}</a></h3>
+            <p class="tiny muted">Submitted {{ s.created_at|naturaltime }}</p>
+            {% if s.admin_feedback %}<p class="feedback">“{{ s.admin_feedback }}”</p>{% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" %}
+  {% else %}
+    <div class="empty card"><h3>No submissions here yet.</h3><a class="btn btn-primary" href="{% url 'tasks' %}">Find a task</a></div>
+  {% endif %}
+</section>
+{% endblock %}

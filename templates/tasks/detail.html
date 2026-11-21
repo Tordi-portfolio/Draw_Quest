@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ task.title }}{% endblock %}
+{% block content %}
+<section class="container detail">
+  <a class="back" href="{% url 'tasks' %}">← All tasks</a>
+  <div class="detail-grid">
+    <article class="card detail-main reveal">
+      <div class="row-between">
+        <span class="tag">{{ task.get_category_display }}</span>
+        <span class="money-chip static">${{ task.reward|floatformat:2|intcomma }}</span>
+      </div>
+      <h1>{{ task.title }}</h1>
+      <h4 class="sub">The brief</h4>
+      <p class="prose">{{ task.description|linebreaksbr }}</p>
+      {% if task.reference_image %}
+        <h4 class="sub">Reference</h4>
+        <img class="ref-img" src="{{ task.reference_image.url }}" alt="Reference for {{ task.title }}">
+      {% endif %}
+      {% if task.deadline %}<p class="muted">Deadline: {{ task.deadline|date:"M j, Y H:i" }} UTC ({{ task.deadline|naturaltime }})</p>{% endif %}
+    </article>
+
+    <aside class="card submit-card reveal">
+      <h3>Your submission</h3>
+      {% if can_submit %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <label class="dropzone" data-dropzone>
+            {{ form.image }}
+            <div class="dz-empty">
+              <span class="dz-icon">⬆</span>
+              <strong>Drop your drawing here</strong>
+              <span class="muted tiny">or click to choose · PNG, JPG, WEBP · max 8 MB</span>
+            </div>
+            <img class="dz-preview" alt="Preview" hidden>
+          </label>
+          {{ form.image.errors }}
+          {{ form.caption }}
+          {{ form.caption.errors }}
+          <button class="btn btn-primary btn-block btn-lg" type="submit">Submit for ${{ task.reward|floatformat:2 }}</button>
+          <p class="tiny muted center">An admin reviews every submission before payment.</p>
+        </form>
+      {% elif blocked %}
+        <div class="note">You already have a submission for this task that's pending or approved. Track it in <a href="{% url 'my_submissions' %}">My art</a>.</div>
+      {% else %}
+        <div class="note">This task is closed.</div>
+      {% endif %}
+
+      {% if attempts %}
+        <h4 class="sub">Your attempts</h4>
+        <ul class="attempts">
+          {% for a in attempts %}
+            <li>
+              <img src="{{ a.image.url }}" alt="" loading="lazy">
+              <div>
+                {% include "partials/status_badge.html" with status=a.status %}
+                <span class="tiny muted">{{ a.created_at|naturaltime }}</span>
+                {% if a.admin_feedback %}<p class="tiny">“{{ a.admin_feedback }}”</p>{% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

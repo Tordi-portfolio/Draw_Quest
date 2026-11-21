@@ -1,0 +1,28 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Users{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">Users &amp; dashboards</h1>
+<form class="filters reveal" method="get"><input class="field" type="search" name="q" value="{{ q }}" placeholder="Search username or email…"></form>
+{% if page.object_list %}
+<div class="card table-card reveal mt">
+  <table class="table">
+    <thead><tr><th>User</th><th>Role</th><th>Balance</th><th>Joined</th><th></th></tr></thead>
+    <tbody>
+    {% for u in page %}
+      <tr>
+        <td><b>{{ u.username }}</b><div class="tiny muted">{{ u.email }}</div></td>
+        <td>{{ u.profile.get_role_display }}</td>
+        <td class="amt pos">${{ u.profile.balance|floatformat:2|intcomma }}</td>
+        <td class="muted">{{ u.date_joined|date:"M j, Y" }}</td>
+        <td class="actions"><a class="btn btn-ghost btn-sm" href="{% url 'panel_user' u.pk %}">Edit balance</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  <div class="empty card mt"><h3>No users found.</h3></div>
+{% endif %}
+{% endblock %}

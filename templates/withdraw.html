@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Withdraw{% endblock %}
+{% block content %}
+<section class="container page-head reveal">
+  <p class="eyebrow">Withdraw</p>
+  <h1>Cash out your <span class="grad">earnings</span></h1>
+</section>
+
+<section class="container withdraw-grid">
+  <div class="card balance reveal">
+    <span class="stat-label">Available balance</span>
+    <span class="balance-value grad">${{ profile.balance|floatformat:2|intcomma }}</span>
+    <div class="progress" role="progressbar" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ progress }}%"></span></div>
+    {% if profile.balance >= min_amount %}
+      <span class="muted">You've reached the ${{ min_amount|floatformat:0|intcomma }} minimum.</span>
+    {% else %}
+      <span class="muted">${{ short_by|floatformat:2|intcomma }} more to reach the ${{ min_amount|floatformat:0|intcomma }} minimum withdrawal.</span>
+    {% endif %}
+    <ul class="rules tiny muted">
+      <li>Minimum withdrawal: <b>${{ min_amount|floatformat:2|intcomma }}</b></li>
+      <li>Every request is reviewed by an admin before it's paid.</li>
+      <li>The amount is held while it's reviewed. If rejected, it returns to your balance.</li>
+    </ul>
+  </div>
+
+  <div class="card form-card reveal">
+    {% if pending %}
+      <h3>Request in review</h3>
+      <div class="note">Your withdrawal of <b>${{ pending.amount|floatformat:2|intcomma }}</b> via {{ pending.get_method_display }} was submitted {{ pending.created_at|naturaltime }} and is waiting for admin review. You can request another once it's decided.</div>
+    {% elif can_withdraw %}
+      <h3>Request a withdrawal</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+        <label class="lbl">{{ form.amount.label }} {{ form.amount }}{{ form.amount.errors }}</label>
+        <label class="lbl">Payout method {{ form.method }}{{ form.method.errors }}</label>
+        <label class="lbl">{{ form.account_details.label }} {{ form.account_details }}<span class="tiny muted">{{ form.account_details.help_text }}</span>{{ form.account_details.errors }}</label>
+        <button class="btn btn-primary btn-lg btn-block" type="submit" data-confirm="Submit this withdrawal request? Double-check your payout details, they can't be edited after you submit.">Request withdrawal</button>
+      </form>
+    {% else %}
+      <h3>Keep drawing</h3>
+      <div class="note">Withdrawals open once your balance reaches <b>${{ min_amount|floatformat:2|intcomma }}</b>. You're at {{ progress }}%.</div>
+      <a class="btn btn-primary mt" href="{% url 'tasks' %}">Find tasks</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="container section tight">
+  <div class="card table-card reveal">
+    <h3 class="pad">Withdrawal history</h3>
+    {% if history %}
+    <table class="table">
+      <thead><tr><th>Requested</th><th>Amount</th><th>Method</th><th>Status</th><th>Details</th></tr></thead>
+      <tbody>
+      {% for h in history %}
+        <tr>
+          <td>{{ h.created_at|date:"M j, Y" }}</td>
+          <td class="amt">${{ h.amount|floatformat:2|intcomma }}</td>
+          <td>{{ h.get_method_display }}</td>
+          <td>{% if h.status == 'pending' %}<span class="badge badge-pending">In review</span>{% elif h.status == 'paid' %}<span class="badge badge-approved">Paid</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}</td>
+          <td class="tiny muted">{% if h.status == 'paid' and h.payment_reference %}Ref: {{ h.payment_reference }}{% endif %}{% if h.admin_note %}<div>“{{ h.admin_note }}”</div>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted pad">No withdrawals yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

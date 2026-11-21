@@ -1,0 +1,52 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Verify deposit{% endblock %}
+{% block panel %}
+<a class="back" href="{% url 'panel_deposits' %}">← Deposits</a>
+<div class="review-grid">
+  <div class="card reveal">
+    <div class="row-between">
+      {% if d.status == 'pending' %}<span class="badge badge-pending">Pending verification</span>{% elif d.status == 'credited' %}<span class="badge badge-approved">Credited</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}
+      <span class="tiny muted">#{{ d.pk }} · {{ d.created_at|date:"M j, Y H:i" }} UTC</span>
+    </div>
+    <span class="stat-label mt block">User claims they sent</span>
+    <span class="balance-value grad">${{ d.amount|floatformat:2|intcomma }}</span>
+    <p class="muted">From <a href="{% url 'panel_user' d.user.pk %}">{{ d.user.username }}</a> ({{ d.user.email }}). Current balance: <b>${{ balance|floatformat:2|intcomma }}</b>.</p>
+
+    <h4 class="sub">Transaction ID</h4>
+    <pre class="acct">{{ d.tx_hash }}</pre>
+    <a class="btn btn-ghost btn-sm" href="https://bscscan.com/tx/{{ d.tx_hash }}" target="_blank" rel="noopener noreferrer">Open on BscScan ↗</a>
+
+    <h4 class="sub">What to check on BscScan</h4>
+    <ul class="rules tiny muted">
+      <li>Status is <b>Success</b>.</li>
+      <li>It's a transfer of <b>BSC-USD (USDT)</b> on BNB Smart Chain.</li>
+      <li>The recipient ("To") is <b>your</b> wallet: {% if address %}<code class="hash">{{ address }}</code>{% else %}no wallet configured{% endif %}.</li>
+      <li>The amount received matches (credit the on-chain amount, not just the claim).</li>
+      <li>The transaction hasn't been credited to anyone else (each TxID can only be submitted once).</li>
+    </ul>
+  </div>
+
+  <div class="card reveal">
+    {% if d.status == 'pending' %}
+      <h3>Your decision</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <label class="lbl">{{ form.credited_amount.label }} {{ form.credited_amount }}<span class="tiny muted">{{ form.credited_amount.help_text }}</span>{{ form.credited_amount.errors }}</label>
+        <label class="lbl">{{ form.note.label }} {{ form.note }}{{ form.note.errors }}</label>
+        <div class="decision">
+          <button class="btn btn-danger btn-lg" name="decision" value="reject" type="submit" data-confirm="Reject this deposit claim?">Reject</button>
+          <button class="btn btn-ok btn-lg" name="decision" value="credit" type="submit" data-confirm="Credit the entered amount to {{ d.user.username }}'s balance? This can't be undone here.">Verify &amp; credit</button>
+        </div>
+      </form>
+    {% else %}
+      <h3>Decision</h3>
+      <div class="note">
+        {% if d.status == 'credited' %}Credited <b>${{ d.credited_amount|floatformat:2 }}</b>{% else %}Rejected{% endif %}
+        {% if d.reviewed_by %}by <b>{{ d.reviewed_by.username }}</b>{% endif %} {{ d.reviewed_at|naturaltime }}.
+        {% if d.admin_note %}<br>Note: “{{ d.admin_note }}”{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

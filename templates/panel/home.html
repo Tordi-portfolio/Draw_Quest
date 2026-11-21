@@ -1,0 +1,44 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Admin overview{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">Overview</h1>
+<div class="grid-4">
+  <div class="card stat reveal"><span class="stat-label">Awaiting review</span><span class="stat-value warn">{{ stats.pending }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Approved</span><span class="stat-value ok">{{ stats.approved }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Live tasks</span><span class="stat-value">{{ stats.tasks }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Users</span><span class="stat-value">{{ stats.users }}</span></div>
+</div>
+<div class="grid-3 mt">
+  <div class="card reveal">
+    <span class="stat-label">Rewards credited</span>
+    <span class="balance-value grad">${{ stats.paid|floatformat:2|intcomma }}</span>
+  </div>
+  <div class="card reveal">
+    <span class="stat-label">Withdrawals paid</span>
+    <span class="balance-value">${{ stats.withdrawn|floatformat:2|intcomma }}</span>
+  </div>
+  <a class="card reveal" href="{% url 'panel_withdrawals' %}">
+    <span class="stat-label">Withdrawals awaiting</span>
+    <span class="balance-value warn">{{ stats.withdrawals_pending }}</span>
+  </a>
+</div>
+
+<div class="card reveal mt">
+  <div class="row-between"><h3>Oldest in the queue</h3><a class="tiny" href="{% url 'panel_submissions' %}">Open full queue →</a></div>
+  {% if queue %}
+    <ul class="list">
+      {% for s in queue %}
+        <li>
+          <img src="{{ s.image.url }}" alt="" loading="lazy">
+          <div class="grow"><b>{{ s.task.title }}</b><div class="tiny muted">by {{ s.user.username }} · {{ s.created_at|naturaltime }}</div></div>
+          <span class="money-chip static">${{ s.reward|floatformat:2 }}</span>
+          <a class="btn btn-ghost btn-sm" href="{% url 'panel_review' s.pk %}">Review</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Queue is clear. Nice work.</p>
+  {% endif %}
+</div>
+{% endblock %}

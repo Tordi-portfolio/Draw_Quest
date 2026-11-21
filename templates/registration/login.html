@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<section class="auth container">
+  <div class="card auth-card reveal">
+    <h1>Welcome back</h1>
+    <p class="muted">Log in to see your tasks and balance.</p>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+      <label class="lbl">Username{{ form.username }}</label>
+      {{ form.username.errors }}
+      <label class="lbl">Password{{ form.password }}</label>
+      {{ form.password.errors }}
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Log in</button>
+    </form>
+    <p class="muted center">New here? <a href="{% url 'signup' %}">Create an account</a></p>
+  </div>
+</section>
+{% endblock %}

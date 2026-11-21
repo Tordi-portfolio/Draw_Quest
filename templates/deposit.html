@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Deposit{% endblock %}
+{% block content %}
+<section class="container page-head reveal">
+  <p class="eyebrow">Deposit</p>
+  <h1>Add funds with <span class="grad">{{ token }}</span></h1>
+</section>
+
+<section class="container withdraw-grid">
+  <div class="card reveal">
+    {% if address %}
+      <h3>Send {{ token }} to this address</h3>
+
+      <div class="net-row">
+        <div class="net-box"><span class="stat-label">Network</span><span class="net-name">{{ network }}</span><span class="tiny muted">{{ network_label }}</span></div>
+        <div class="net-box"><span class="stat-label">Token</span><span class="net-name">{{ token }}</span><span class="tiny muted">Tether USD</span></div>
+      </div>
+
+      <span class="stat-label block">{{ token }} wallet address ({{ network }})</span>
+      <div class="addr-box">
+        <code id="walletAddr">{{ address }}</code>
+        <button type="button" class="btn btn-primary btn-sm" data-copy="{{ address }}">Copy</button>
+      </div>
+
+      <div class="warn-box">
+        <b>Important</b>
+        <ul>
+          <li>Send <b>only {{ token }}</b> on the <b>{{ network }} ({{ network_label }})</b> network.</li>
+          <li>Deposits sent on any other network (Ethereum, Tron, Polygon…) or in any other coin <b>will be lost</b> and can't be recovered.</li>
+          <li>Copy the address with the button and double-check the first and last characters before sending.</li>
+          <li>Send a small test amount first if you're unsure.</li>
+        </ul>
+      </div>
+
+      <ol class="steps-list muted">
+        <li>Send {{ token }} on {{ network }} from your wallet or exchange to the address above.</li>
+        <li>Copy the <b>transaction ID (TxID)</b> from your wallet.</li>
+        <li>Submit the amount and TxID in the form. An admin verifies it on the blockchain and credits your balance.</li>
+      </ol>
+    {% else %}
+      <h3>Deposits unavailable</h3>
+      {% if user.is_staff %}
+        <div class="note">
+          <b>Admin setup needed.</b> No valid wallet address is set. {% if user.is_superuser %}<a href="/admin/core/depositsettings/">Add your USDT (BSC) wallet address in the admin</a>; it shows here immediately.{% else %}Ask a superuser to add the USDT (BSC) wallet address in the admin at /admin/.{% endif %} Users see this page as unavailable until then.
+        </div>
+      {% else %}
+        <div class="note">Deposits are temporarily unavailable. Please check back soon.</div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="card form-card reveal">
+    {% if address %}
+      <h3>I've sent my deposit</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+        <label class="lbl">{{ form.amount.label }} {{ form.amount }}{{ form.amount.errors }}</label>
+        <label class="lbl">{{ form.tx_hash.label }} {{ form.tx_hash }}<span class="tiny muted">Find it in your wallet's transaction details, or on bscscan.com.</span>{{ form.tx_hash.errors }}</label>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Submit for verification</button>
+      </form>
+    {% else %}
+      <h3>Your deposits</h3>
+      <p class="muted">You'll be able to submit deposits here once they're enabled.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="container section tight">
+  <div class="card table-card reveal">
+    <h3 class="pad">Deposit history</h3>
+    {% if history %}
+    <table class="table">
+      <thead><tr><th>Submitted</th><th>Claimed</th><th>Credited</th><th>Status</th><th>Transaction</th></tr></thead>
+      <tbody>
+      {% for h in history %}
+        <tr>
+          <td>{{ h.created_at|date:"M j, Y" }}</td>
+          <td>${{ h.amount|floatformat:2|intcomma }}</td>
+          <td class="amt {% if h.credited_amount %}pos{% endif %}">{% if h.credited_amount %}${{ h.credited_amount|floatformat:2|intcomma }}{% else %}—{% endif %}</td>
+          <td>{% if h.status == 'pending' %}<span class="badge badge-pending">Verifying</span>{% elif h.status == 'credited' %}<span class="badge badge-approved">Credited</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}</td>
+          <td class="tiny muted"><span class="hash">{{ h.tx_hash }}</span>{% if h.admin_note %}<div>“{{ h.admin_note }}”</div>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="muted pad">No deposits yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

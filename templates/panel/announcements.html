@@ -1,0 +1,32 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Announcements{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">Dashboard announcements</h1>
+<p class="muted">Posts appear on every user's dashboard. Use them for news, bonuses, or new-task drops.</p>
+
+<form class="card form-card reveal mt" method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <label class="lbl">Title {{ form.title }}{{ form.title.errors }}</label>
+  <label class="lbl">Message {{ form.body }}{{ form.body.errors }}</label>
+  <div class="lbl">Image (optional) {{ form.image }}{{ form.image.errors }}</div>
+  <label class="check">{{ form.is_active }} <span>{{ form.is_active.label }}</span></label>
+  <button class="btn btn-primary" type="submit">Post announcement</button>
+</form>
+
+<div class="card reveal mt">
+  <h3>Posted</h3>
+  {% if items %}
+  <ul class="list">
+    {% for a in items %}
+      <li>
+        {% if a.image %}<img src="{{ a.image.url }}" alt="" loading="lazy">{% endif %}
+        <div class="grow"><b>{{ a.title }}</b><div class="tiny muted">{{ a.created_at|naturaltime }} · {% if a.is_active %}Visible{% else %}Hidden{% endif %}</div></div>
+        <form method="post" action="{% url 'panel_announcement_action' a.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-sm" name="action" value="toggle">{% if a.is_active %}Hide{% else %}Show{% endif %}</button></form>
+        <form method="post" action="{% url 'panel_announcement_action' a.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-sm" name="action" value="delete" data-confirm="Delete this announcement?">Delete</button></form>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">Nothing posted yet.</p>{% endif %}
+</div>
+{% endblock %}

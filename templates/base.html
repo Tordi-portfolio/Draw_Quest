@@ -1,0 +1,61 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#06060b">
+  <title>{% block title %}DrawQuest{% endblock %} · DrawQuest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav-wrap">
+    <nav class="nav glass" aria-label="Main">
+      <a class="brand" href="{% url 'home' %}"><span class="brand-mark"></span>Draw<b>Quest</b></a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span></span><span></span></button>
+      <div class="nav-links" id="navLinks">
+        {% if user.is_authenticated %}
+          <a href="{% url 'tasks' %}" class="{% if request.resolver_match.url_name == 'tasks' or request.resolver_match.url_name == 'task_detail' %}is-active{% endif %}">Tasks</a>
+          <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">Dashboard</a>
+          <a href="{% url 'my_submissions' %}" class="{% if request.resolver_match.url_name == 'my_submissions' %}is-active{% endif %}">My art</a>
+          <a href="{% url 'deposit' %}" class="{% if request.resolver_match.url_name == 'deposit' %}is-active{% endif %}">Deposit</a>
+          <a href="{% url 'withdraw' %}" class="{% if request.resolver_match.url_name == 'withdraw' %}is-active{% endif %}">Withdraw</a>
+          {% if user.is_staff %}
+            <a href="{% url 'panel_home' %}" class="nav-panel {% if request.path|slice:':7' == '/panel/' %}is-active{% endif %}">Admin panel{% if pending_review_count or pending_withdrawal_count or pending_deposit_count %}<span class="pill">{{ pending_review_count|add:pending_withdrawal_count|add:pending_deposit_count }}</span>{% endif %}</a>
+          {% endif %}
+          <a href="{% url 'profile' %}" class="nav-user">
+            {% if user.profile.avatar %}<img src="{{ user.profile.avatar.url }}" alt="">{% else %}<span class="avatar-fallback">{{ user.username|slice:":1"|upper }}</span>{% endif %}
+            <span>{{ user.username }}</span>
+          </a>
+          <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Log out</button></form>
+        {% else %}
+          <a href="{% url 'login' %}">Log in</a>
+          <a href="{% url 'signup' %}" class="btn btn-primary btn-sm">Start earning</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+  <div class="toasts" role="status" aria-live="polite">
+    {% for m in messages %}<div class="toast toast-{{ m.tags }}">{{ m }}</div>{% endfor %}
+  </div>
+  {% endif %}
+
+  <main>{% block content %}{% endblock %}</main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="brand"><span class="brand-mark"></span>Draw<b>Quest</b></span>
+      <span class="muted">Draw. Complete tasks. Get paid.</span>
+      <span class="muted">© {% now "Y" %} DrawQuest</span>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}" defer></script>
+</body>
+</html>

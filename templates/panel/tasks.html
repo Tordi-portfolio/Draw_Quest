@@ -1,0 +1,30 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Manage tasks{% endblock %}
+{% block panel %}
+<div class="row-between reveal"><h1 class="h-sm">Tasks</h1><a class="btn btn-primary" href="{% url 'panel_task_new' %}">+ New task</a></div>
+{% if page.object_list %}
+<div class="card table-card reveal mt">
+  <table class="table">
+    <thead><tr><th>Task</th><th>Reward</th><th>Submissions</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for t in page %}
+      <tr>
+        <td><b>{{ t.title }}</b><div class="tiny muted">{{ t.get_category_display }} · {{ t.created_at|date:"M j" }}</div></td>
+        <td>${{ t.reward|floatformat:2 }}</td>
+        <td>{{ t.total }}{% if t.pending %} <span class="pill">{{ t.pending }} pending</span>{% endif %}</td>
+        <td>{% if t.is_open %}<span class="badge badge-approved">Live</span>{% elif t.is_active %}<span class="badge badge-pending">Past deadline</span>{% else %}<span class="badge badge-rejected">Hidden</span>{% endif %}</td>
+        <td class="actions">
+          <a class="btn btn-ghost btn-sm" href="{% url 'panel_task_edit' t.pk %}">Edit</a>
+          <form method="post" action="{% url 'panel_task_toggle' t.pk %}" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit">{% if t.is_active %}Hide{% else %}Publish{% endif %}</button></form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  <div class="empty card mt"><h3>No tasks yet.</h3><a class="btn btn-primary" href="{% url 'panel_task_new' %}">Create the first task</a></div>
+{% endif %}
+{% endblock %}

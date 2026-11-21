@@ -1,0 +1,37 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Withdrawals{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">Withdrawal requests</h1>
+<form class="filters reveal" method="get">
+  <input class="field" type="search" name="q" value="{{ q }}" placeholder="Search by user or reference…">
+  <div class="chips">
+    {% for value, label in statuses %}<a class="chip {% if status == value %}is-active{% endif %}" href="?status={{ value }}">{{ label }}</a>{% endfor %}
+    <a class="chip {% if status == 'all' %}is-active{% endif %}" href="?status=all">All</a>
+  </div>
+  <input type="hidden" name="status" value="{{ status }}">
+</form>
+
+{% if page.object_list %}
+<div class="card table-card reveal mt">
+  <table class="table">
+    <thead><tr><th>User</th><th>Amount</th><th>Method</th><th>Requested</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for w in page %}
+      <tr>
+        <td><b>{{ w.user.username }}</b></td>
+        <td class="amt">${{ w.amount|floatformat:2|intcomma }}</td>
+        <td>{{ w.get_method_display }}</td>
+        <td class="muted">{{ w.created_at|naturaltime }}</td>
+        <td>{% if w.status == 'pending' %}<span class="badge badge-pending">Pending</span>{% elif w.status == 'paid' %}<span class="badge badge-approved">Paid</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}</td>
+        <td class="actions"><a class="btn btn-ghost btn-sm" href="{% url 'panel_withdrawal_review' w.pk %}">{% if w.status == 'pending' %}Review{% else %}View{% endif %}</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  <div class="empty card mt"><h3>No withdrawals here.</h3><p class="muted">Nothing matches this filter.</p></div>
+{% endif %}
+{% endblock %}

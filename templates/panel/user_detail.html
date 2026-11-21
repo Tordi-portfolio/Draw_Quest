@@ -1,0 +1,48 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}{{ target.username }}{% endblock %}
+{% block panel %}
+<a class="back" href="{% url 'panel_users' %}">← Users</a>
+<div class="row-between reveal"><h1 class="h-sm">{{ target.username }}</h1><span class="tag">{{ profile.get_role_display }}</span></div>
+<p class="muted">{{ target.email }} · joined {{ target.date_joined|date:"M j, Y" }}</p>
+
+<div class="review-grid mt">
+  <div class="card balance reveal">
+    <span class="stat-label">Dashboard balance</span>
+    <span class="balance-value grad">${{ profile.balance|floatformat:2|intcomma }}</span>
+  </div>
+  <form class="card form-card reveal" method="post" novalidate>
+    {% csrf_token %}
+    <h3>Update balance</h3>
+    <p class="tiny muted">Add funds with a positive amount or deduct with a negative one. Every change is recorded in the user's ledger with your note.</p>
+    {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+    <label class="lbl">Amount ($) {{ form.amount }}<span class="tiny muted">{{ form.amount.help_text }}</span>{{ form.amount.errors }}</label>
+    <label class="lbl">Note {{ form.note }}{{ form.note.errors }}</label>
+    <button class="btn btn-primary" type="submit" data-confirm="Apply this change to {{ target.username }}'s dashboard?">Apply to dashboard</button>
+  </form>
+</div>
+
+<div class="two-col mt">
+  <div class="card reveal">
+    <h3>Ledger</h3>
+    {% if transactions %}
+    <ul class="list">
+      {% for t in transactions %}
+        <li><div class="grow"><b>{{ t.note|default:t.get_kind_display }}</b><div class="tiny muted">{{ t.get_kind_display }} · {{ t.created_at|naturaltime }}</div></div>
+        <span class="amt {% if t.amount < 0 %}neg{% else %}pos{% endif %}">{% if t.amount > 0 %}+{% endif %}${{ t.amount|floatformat:2 }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">No activity yet.</p>{% endif %}
+  </div>
+  <div class="card reveal">
+    <h3>Recent submissions</h3>
+    {% if submissions %}
+    <ul class="list">
+      {% for s in submissions %}
+        <li><img src="{{ s.image.url }}" alt="" loading="lazy"><div class="grow"><a href="{% url 'panel_review' s.pk %}"><b>{{ s.task.title }}</b></a><div class="tiny muted">{{ s.created_at|naturaltime }}</div></div>{% include "partials/status_badge.html" with status=s.status %}</li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">No submissions yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

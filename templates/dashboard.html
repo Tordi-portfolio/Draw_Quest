@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<section class="container page-head reveal">
+  <p class="eyebrow">Dashboard</p>
+  <h1>Hey, {{ user.username }} <span class="wave">👋</span></h1>
+</section>
+
+<section class="container dash-grid">
+  <div class="card balance reveal">
+    <span class="stat-label">Points balance</span>
+    <span class="balance-value grad">$<span data-count="{{ profile.balance|floatformat:2 }}" data-decimals="2">{{ profile.balance|floatformat:2 }}</span></span>
+    <span class="muted">Lifetime earned: <b>${{ earned|floatformat:2|intcomma }}</b></span>
+    <div class="progress" role="progressbar" aria-valuenow="{{ withdraw_progress }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ withdraw_progress }}%"></span></div>
+    <span class="tiny muted">{% if can_withdraw %}You can withdraw now (minimum ${{ min_withdrawal|floatformat:0|intcomma }}).{% else %}{{ withdraw_progress }}% of the ${{ min_withdrawal|floatformat:0|intcomma }} minimum to withdraw.{% endif %}</span>
+    <div class="btn-row">
+      <a class="btn btn-primary" href="{% url 'tasks' %}">Earn more →</a>
+      <a class="btn btn-ghost" href="{% url 'deposit' %}">Deposit</a>
+      <a class="btn btn-ghost" href="{% url 'withdraw' %}">{% if pending_withdrawal %}Withdrawal in review{% else %}Withdraw{% endif %}</a>
+    </div>
+  </div>
+  <div class="card stat reveal"><span class="stat-label">Pending</span><span class="stat-value warn">{{ counts.pending }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Approved</span><span class="stat-value ok">{{ counts.approved }}</span></div>
+  <div class="card stat reveal"><span class="stat-label">Rejected</span><span class="stat-value bad">{{ counts.rejected }}</span></div>
+</section>
+
+{% if announcements %}
+<section class="container section tight">
+  <div class="grid-2">
+    {% for a in announcements %}
+      <div class="card announce reveal">
+        {% if a.image %}<img src="{{ a.image.url }}" alt="" loading="lazy">{% endif %}
+        <div><span class="tag">From DrawQuest</span><h3>{{ a.title }}</h3>{% if a.body %}<p class="muted">{{ a.body }}</p>{% endif %}<span class="tiny muted">{{ a.created_at|naturaltime }}</span></div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="container section tight two-col">
+  <div class="card reveal">
+    <div class="row-between"><h3>Recent submissions</h3><a href="{% url 'my_submissions' %}" class="tiny">View all</a></div>
+    {% if recent_subs %}
+      <ul class="list">
+        {% for s in recent_subs %}
+          <li>
+            <img src="{{ s.image.url }}" alt="" loading="lazy">
+            <div class="grow"><a href="{% url 'task_detail' s.task.pk %}"><b>{{ s.task.title }}</b></a><div class="tiny muted">{{ s.created_at|naturaltime }}</div></div>
+            {% include "partials/status_badge.html" with status=s.status %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">Nothing yet. Your first drawing starts it all.</p>
+    {% endif %}
+  </div>
+
+  <div class="card reveal">
+    <h3>Activity</h3>
+    {% if transactions %}
+      <ul class="list">
+        {% for t in transactions %}
+          <li>
+            <div class="grow"><b>{{ t.note|default:t.get_kind_display }}</b><div class="tiny muted">{{ t.created_at|naturaltime }}</div></div>
+            <span class="amt {% if t.amount < 0 %}neg{% else %}pos{% endif %}">{% if t.amount > 0 %}+{% endif %}${{ t.amount|floatformat:2 }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">Your earnings will show up here.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if suggested %}
+<section class="container section tight">
+  <div class="section-head"><h2>Up next for you</h2></div>
+  <div class="grid-3">{% for t in suggested %}{% include "partials/task_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

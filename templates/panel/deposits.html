@@ -1,0 +1,37 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Deposits{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">USDT deposit claims</h1>
+<form class="filters reveal" method="get">
+  <input class="field" type="search" name="q" value="{{ q }}" placeholder="Search by user or TxID…">
+  <div class="chips">
+    {% for value, label in statuses %}<a class="chip {% if status == value %}is-active{% endif %}" href="?status={{ value }}">{{ label }}</a>{% endfor %}
+    <a class="chip {% if status == 'all' %}is-active{% endif %}" href="?status=all">All</a>
+  </div>
+  <input type="hidden" name="status" value="{{ status }}">
+</form>
+
+{% if page.object_list %}
+<div class="card table-card reveal mt">
+  <table class="table">
+    <thead><tr><th>User</th><th>Claimed</th><th>Transaction</th><th>Submitted</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for d in page %}
+      <tr>
+        <td><b>{{ d.user.username }}</b></td>
+        <td class="amt">${{ d.amount|floatformat:2|intcomma }}</td>
+        <td class="tiny"><span class="hash">{{ d.tx_hash|slice:":10" }}…{{ d.tx_hash|slice:"-6:" }}</span></td>
+        <td class="muted">{{ d.created_at|naturaltime }}</td>
+        <td>{% if d.status == 'pending' %}<span class="badge badge-pending">Pending</span>{% elif d.status == 'credited' %}<span class="badge badge-approved">Credited</span>{% else %}<span class="badge badge-rejected">Rejected</span>{% endif %}</td>
+        <td class="actions"><a class="btn btn-ghost btn-sm" href="{% url 'panel_deposit_review' d.pk %}">{% if d.status == 'pending' %}Verify{% else %}View{% endif %}</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  <div class="empty card mt"><h3>No deposit claims here.</h3><p class="muted">Nothing matches this filter.</p></div>
+{% endif %}
+{% endblock %}

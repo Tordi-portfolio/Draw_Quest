@@ -1,0 +1,32 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Review queue{% endblock %}
+{% block panel %}
+<h1 class="h-sm reveal">Review queue</h1>
+<form class="filters reveal" method="get">
+  <input class="field" type="search" name="q" value="{{ q }}" placeholder="Search by user or task…">
+  <div class="chips">
+    {% for value, label in statuses %}<a class="chip {% if status == value %}is-active{% endif %}" href="?status={{ value }}">{{ label }}</a>{% endfor %}
+    <a class="chip {% if status == 'all' %}is-active{% endif %}" href="?status=all">All</a>
+  </div>
+  <input type="hidden" name="status" value="{{ status }}">
+</form>
+
+{% if page.object_list %}
+<div class="grid-3 mt">
+  {% for s in page %}
+    <a class="card sub-card reveal" href="{% url 'panel_review' s.pk %}">
+      <div class="thumb"><img src="{{ s.image.url }}" alt="" loading="lazy"><span class="money-chip">${{ s.reward|floatformat:2 }}</span></div>
+      <div class="task-body">
+        {% include "partials/status_badge.html" with status=s.status %}
+        <h3>{{ s.task.title }}</h3>
+        <p class="tiny muted">{{ s.user.username }} · {{ s.created_at|naturaltime }}</p>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+{% include "partials/pagination.html" %}
+{% else %}
+  <div class="empty card mt"><h3>Nothing here.</h3><p class="muted">No submissions match this filter.</p></div>
+{% endif %}
+{% endblock %}

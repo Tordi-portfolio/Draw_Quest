@@ -1,0 +1,22 @@
+{% load humanize %}
+<a class="card task-card reveal" href="{% url 'task_detail' t.pk %}">
+  <div class="thumb">
+    {% if t.reference_image %}
+      <img src="{{ t.reference_image.url }}" alt="" loading="lazy">
+    {% else %}
+      <span class="thumb-glyph">{{ t.get_category_display|slice:":1" }}</span>
+    {% endif %}
+    <span class="money-chip">${{ t.reward|floatformat:2|intcomma }}</span>
+  </div>
+  <div class="task-body">
+    <div class="row-between">
+      <span class="tag">{{ t.get_category_display }}</span>
+      {% if t.my_status == 'pending' %}<span class="badge badge-pending">In review</span>
+      {% elif t.my_status == 'approved' %}<span class="badge badge-approved">Paid</span>
+      {% elif t.my_status == 'rejected' %}<span class="badge badge-rejected">Try again</span>{% endif %}
+    </div>
+    <h3>{{ t.title }}</h3>
+    <p class="muted clamp">{{ t.description }}</p>
+    {% if t.deadline %}<p class="tiny muted">Ends {{ t.deadline|naturaltime }}</p>{% endif %}
+  </div>
+</a>

@@ -1,0 +1,23 @@
+{% extends "panel/layout.html" %}
+{% block title %}{% if task %}Edit task{% else %}New task{% endif %}{% endblock %}
+{% block panel %}
+<a class="back" href="{% url 'panel_tasks' %}">← Tasks</a>
+<h1 class="h-sm reveal">{% if task %}Edit task{% else %}Publish a new task{% endif %}</h1>
+<form class="card form-card reveal" method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-error">{{ form.non_field_errors }}</div>{% endif %}
+  <label class="lbl">Title {{ form.title }}{{ form.title.errors }}</label>
+  <label class="lbl">Description / brief {{ form.description }}{{ form.description.errors }}</label>
+  <div class="two-fields">
+    <label class="lbl">{{ form.reward.label }} {{ form.reward }}{{ form.reward.errors }}</label>
+    <label class="lbl">Category {{ form.category }}{{ form.category.errors }}</label>
+  </div>
+  <label class="lbl">{{ form.deadline.label }} {{ form.deadline }}<span class="tiny muted">{{ form.deadline.help_text }}</span>{{ form.deadline.errors }}</label>
+  <div class="lbl">Reference image (optional)
+    {% if task and task.reference_image %}<img class="ref-img sm" src="{{ task.reference_image.url }}" alt="Current reference">{% endif %}
+    {{ form.reference_image }}{{ form.reference_image.errors }}
+  </div>
+  <label class="check">{{ form.is_active }} <span>{{ form.is_active.label }}</span></label>
+  <button class="btn btn-primary btn-lg" type="submit">{% if task %}Save task{% else %}Publish to all users{% endif %}</button>
+</form>
+{% endblock %}

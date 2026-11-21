@@ -1,0 +1,39 @@
+{% extends "panel/layout.html" %}
+{% load humanize %}
+{% block title %}Review submission{% endblock %}
+{% block panel %}
+<a class="back" href="{% url 'panel_submissions' %}">← Review queue</a>
+<div class="review-grid">
+  <div class="card reveal review-img">
+    <a href="{{ sub.image.url }}" target="_blank" rel="noopener"><img src="{{ sub.image.url }}" alt="Submitted drawing"></a>
+    <p class="tiny muted center">Click the image to open it full size.</p>
+  </div>
+
+  <div class="card reveal">
+    <div class="row-between">{% include "partials/status_badge.html" with status=sub.status %}<span class="money-chip static">${{ sub.reward|floatformat:2 }}</span></div>
+    <h2 class="h-sm">{{ sub.task.title }}</h2>
+    <p class="muted">By <a href="{% url 'panel_user' sub.user.pk %}">{{ sub.user.username }}</a> · {{ sub.created_at|naturaltime }}</p>
+    {% if sub.caption %}<p class="feedback">Artist's note: “{{ sub.caption }}”</p>{% endif %}
+    <h4 class="sub">Task brief</h4>
+    <p class="prose small">{{ sub.task.description|linebreaksbr }}</p>
+    {% if sub.task.reference_image %}<img class="ref-img sm" src="{{ sub.task.reference_image.url }}" alt="Reference">{% endif %}
+
+    {% if sub.status == 'pending' %}
+      <form method="post" class="mt" novalidate>
+        {% csrf_token %}
+        {{ form.feedback }}
+        {{ form.feedback.errors }}
+        <div class="decision">
+          <button class="btn btn-danger btn-lg" name="decision" value="reject" type="submit">Reject</button>
+          <button class="btn btn-ok btn-lg" name="decision" value="approve" type="submit" data-confirm="Approve and credit ${{ sub.reward }} to {{ sub.user.username }}?">Approve &amp; pay ${{ sub.reward|floatformat:2 }}</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="note mt">
+        Reviewed {% if sub.reviewed_by %}by <b>{{ sub.reviewed_by.username }}</b>{% endif %} {{ sub.reviewed_at|naturaltime }}.
+        {% if sub.admin_feedback %}<br>Feedback: “{{ sub.admin_feedback }}”{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

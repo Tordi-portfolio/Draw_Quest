@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block body_class %}is-panel{% endblock %}
+{% block content %}
+<div class="container panel">
+  <aside class="panel-nav card">
+    <p class="eyebrow">Admin panel</p>
+    {% with n=request.resolver_match.url_name %}
+    <a href="{% url 'panel_home' %}" class="{% if n == 'panel_home' %}is-active{% endif %}">Overview</a>
+    <a href="{% url 'panel_submissions' %}" class="{% if n == 'panel_submissions' or n == 'panel_review' %}is-active{% endif %}">Review queue{% if pending_review_count %}<span class="pill">{{ pending_review_count }}</span>{% endif %}</a>
+    <a href="{% url 'panel_deposits' %}" class="{% if n == 'panel_deposits' or n == 'panel_deposit_review' %}is-active{% endif %}">Deposits{% if pending_deposit_count %}<span class="pill">{{ pending_deposit_count }}</span>{% endif %}</a>
+    <a href="{% url 'panel_withdrawals' %}" class="{% if n == 'panel_withdrawals' or n == 'panel_withdrawal_review' %}is-active{% endif %}">Withdrawals{% if pending_withdrawal_count %}<span class="pill">{{ pending_withdrawal_count }}</span>{% endif %}</a>
+    <a href="{% url 'panel_tasks' %}" class="{% if n == 'panel_tasks' or n == 'panel_task_new' or n == 'panel_task_edit' %}is-active{% endif %}">Tasks</a>
+    <a href="{% url 'panel_users' %}" class="{% if n == 'panel_users' or n == 'panel_user' %}is-active{% endif %}">Users &amp; dashboards</a>
+    <a href="{% url 'panel_announcements' %}" class="{% if n == 'panel_announcements' %}is-active{% endif %}">Announcements</a>
+    {% endwith %}
+    {% if user.is_superuser %}<a href="/admin/core/depositsettings/">Wallet address ↗</a>{% endif %}
+    <a href="{% url 'panel_task_new' %}" class="btn btn-primary btn-sm btn-block">+ New task</a>
+  </aside>
+  <div class="panel-main">{% block panel %}{% endblock %}</div>
+</div>
+{% endblock %}
